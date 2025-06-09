@@ -48,22 +48,23 @@ function auto_link_ports(args)
     }
 
     function _connect()
-        --for output_name, input_name in pairs(connections) do
         for i = 1, #connections, 1 do
             local output_name = connections[i][1]
             local input_name = connections[i][2]
 
-            local output = output_om:lookup {
-                Constraint {
-                    "audio.channel", "equals", output_name
-                }
-            }
+            local output = nil
+            if output_name == "" then
+                output = output_om:lookup { }
+            else
+                output = output_om:lookup { Constraint { "audio.channel", "equals", output_name } }
+            end
 
-            local input = input_om:lookup {
-                Constraint {
-                    "audio.channel", "equals", input_name
-                }
-            }
+            local input = nil
+            if input_name == "" then
+                input = input_om:lookup { }
+            else
+                input = input_om:lookup { Constraint { "audio.channel", "equals", input_name } }
+            end
             
             link_port(output, input)
         end
@@ -83,5 +84,33 @@ auto_link_ports {
     connect = {
         {"MONO", "FL"},
         {"MONO", "FR"}
+    }
+}
+
+-- System to Headset
+auto_link_ports {
+    output = Constraint { "port.alias", "matches", "System:playback*"},
+    input = Constraint { "port.alias", "matches", "Arctis Nova Pro Wireless:playback*"},
+    connect = {
+        {"FL", "FL"},
+        {"FR", "FR"}
+    }
+}
+
+-- Mic to Gate
+auto_link_ports {
+    output = Constraint { "port.alias", "matches", "Arctis Nova Pro Wireless:capture*"},
+    input = Constraint { "port.alias", "matches", "Noise Gate:input*"},
+    connect = {
+        {"MONO", "MONO"}
+    }
+}
+
+-- Gate to Virtual Mic
+auto_link_ports {
+    output = Constraint { "port.alias", "matches", "Noise Gate:output*"},
+    input = Constraint { "port.alias", "matches", "Virtual-Mic:input*"},
+    connect = {
+        {"MONO", "MONO"}
     }
 }
